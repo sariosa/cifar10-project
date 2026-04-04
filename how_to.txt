@@ -1,3 +1,6 @@
 you need python 13.12 version
 
 if test_data_loader.py failed because of the certificate, you need to activate the the python certificate 
+
+
+the command for seeing the CNN.keras file in output folder is : netron outputs/baseline_model.keras
