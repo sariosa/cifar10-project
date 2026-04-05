@@ -33,6 +33,7 @@ Then inside Python:
 
 import os
 import sys
+import matplotlib.pyplot as plt
 
 # Set the project root so imports from the src folder work correctly
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -85,7 +86,51 @@ def train_baseline_model():
 
     print(f"Saved model to: {save_path}")
 
+    # Plot and save training curves
+    plot_training_curves(history, output_dir)
+
     return model, history
+
+
+def plot_training_curves(history, output_dir):
+    """
+    Plot and save accuracy and loss curves from baseline CNN training.
+
+    Shows:
+    - Training vs validation accuracy over epochs
+    - Training vs validation loss over epochs
+
+    Args:
+        history: Training history returned by model.fit()
+        output_dir: Folder to save the plot
+    """
+    epochs = range(1, len(history.history["accuracy"]) + 1)
+
+    plt.figure(figsize=(12, 4))
+
+    # Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs, history.history["accuracy"], label="Train Accuracy")
+    plt.plot(epochs, history.history["val_accuracy"], label="Val Accuracy")
+    plt.title("Baseline CNN — Accuracy")
+    plt.xlabel("Epoch")
+    plt.ylabel("Accuracy")
+    plt.legend()
+
+    # Loss
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs, history.history["loss"], label="Train Loss")
+    plt.plot(epochs, history.history["val_loss"], label="Val Loss")
+    plt.title("Baseline CNN — Loss")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend()
+
+    plt.tight_layout()
+    save_path = os.path.join(output_dir, "baseline_training_curves.png")
+    plt.savefig(save_path)
+    plt.show()
+    print(f"Training curves saved to: {save_path}")
 
 
 def main():
