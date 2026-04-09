@@ -1,5 +1,11 @@
 """
-train_baseline.py
+train_baseline.py (updated)
+
+Changes from original:
+  - Saves test accuracy and loss to outputs/baseline_results.json after training.
+    This lets train_improved.py read the real baseline number instead of using
+    the hardcoded 0.70 placeholder.
+  - Everything else (training loop, model, epochs) is identical to the original.
 
 This file does three things:
 1. Loads and preprocesses the CIFAR-10 dataset.
@@ -34,6 +40,7 @@ Then inside Python:
 import os
 import sys
 import matplotlib.pyplot as plt
+import json
 
 # Set the project root so imports from the src folder work correctly
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -85,6 +92,18 @@ def train_baseline_model():
     model.save(save_path)
 
     print(f"Saved model to: {save_path}")
+
+    # ── NEW: persist results so train_improved.py can read the real baseline ──
+    results = {
+        "test_accuracy": round(float(test_acc), 4),
+        "test_loss":     round(float(test_loss), 4),
+        "epochs":        10,
+        "batch_size":    64,
+    }
+    results_path = os.path.join(output_dir, "baseline_results.json")
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=2)
+    print(f"Results saved to: {results_path}")
 
     # Plot and save training curves
     plot_training_curves(history, output_dir)

@@ -1,12 +1,12 @@
 # CIFAR-10 Image Classification
 
-A CNN-based image classification project on the CIFAR-10 dataset. Covers baseline training, data augmentation, and transfer learning with ResNet50.
+A CNN-based image classification project on the CIFAR-10 dataset. Covers baseline training, data augmentation, transfer learning with ResNet50, and an improved CNN with BatchNormalization and adaptive training callbacks.
 
 ---
 
 ## Setup
 
-**Requirements:** Python 3.9
+**Requirements:** Python 3.12 (not Python 3.9)
 
 ### 1. Clone the repository
 ```bash
@@ -16,7 +16,7 @@ cd cifar10-project
 
 ### 2. Create and activate a virtual environment
 ```bash
-python3.9 -m venv venv
+python3.12 -m venv venv
 
 # Mac/Linux
 source venv/bin/activate
@@ -38,7 +38,7 @@ pip install -r requirements.txt
 ```bash
 python src/train_baseline.py
 ```
-Trains for 10 epochs, prints test accuracy, saves model to `outputs/CNN.keras`.
+Trains for 10 epochs, prints test accuracy, saves model to `outputs/CNN.keras`, and saves `outputs/baseline_results.json` for use by the improved model comparison.
 
 ### Data Augmentation
 ```bash
@@ -57,6 +57,17 @@ python src/transfer_learning.py
 ```
 Downloads ResNet50 weights (first run only), trains in two phases, prints accuracy comparison, saves model and plots to `outputs/`.
 
+### Improved CNN
+```bash
+python src/train_improved.py
+```
+Trains the improved architecture with augmented data and adaptive callbacks. Run `src/train_baseline.py` first if `outputs/baseline_results.json` does not exist — it is needed to print the comparison table. Saves the best model to `outputs/CNN_improved.keras` and training curves to `outputs/`.
+
+To view TensorBoard logs after training:
+```bash
+tensorboard --logdir=logs/improved
+```
+
 ---
 
 ## What Each File Does
@@ -72,7 +83,7 @@ Defines the baseline CNN architecture:
 - Compiled with Adam + categorical crossentropy
 
 ### `src/train_baseline.py`
-Trains the baseline CNN on CIFAR-10 for 10 epochs. Evaluates on the test set and saves the model to `outputs/CNN.keras`.
+Trains the baseline CNN on CIFAR-10 for 10 epochs. Evaluates on the test set, saves the model to `outputs/CNN.keras`, and writes `outputs/baseline_results.json` so the improved training script can read the real baseline accuracy for comparison.
 
 ### `src/augmentation.py`
 - Applies augmentation (rotation, shifts, zoom, horizontal flip)
@@ -91,3 +102,19 @@ Trains the baseline CNN on CIFAR-10 for 10 epochs. Evaluates on the test set and
 - Compares accuracy vs baseline CNN
 - Saves model to `outputs/resnet50_cifar10.keras`
 - Saves architecture diagram and training curves to `outputs/`
+
+### `src/model_improved_cnn.py`
+Defines the improved CNN architecture:
+- 3 × Conv2D layers (64 → 128 → 256 filters) with `padding='same'`
+- BatchNormalization after each Conv2D
+- LeakyReLU(0.1) activations throughout (prevents dead neurons)
+- Dense(256) → Dropout(0.4) → Dense(10, softmax)
+- Compiled with Adam + categorical crossentropy
+
+### `src/train_improved.py`
+Trains the improved CNN on CIFAR-10 with augmented data and three callbacks:
+- `ReduceLROnPlateau` — halves the learning rate when val_accuracy stalls for 3 epochs
+- `EarlyStopping` — stops training when val_loss stops improving (patience 7), restores best weights
+- `ModelCheckpoint` — saves the best model to `outputs/CNN_improved.keras`
+
+Reads `outputs/baseline_results.json` to print a live accuracy comparison at the end. Saves final model, training curves, and results JSON to `outputs/`.

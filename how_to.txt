@@ -14,18 +14,32 @@ Certificate issue
 - If `test_data_loader.py` fails because of a certificate error, activate the Python certificates on your system, then run the test again.
 
 Recommended order for running the files
-1. `test_data_loader.py`
+1. `python test/test_data_loader.py`
    - Verifies that CIFAR-10 loads correctly
 
-2. `src/train_baseline.py`
+2. `python src/train_baseline.py`
    - Trains the baseline CNN
    - Evaluates the model
    - Saves the trained model to the `outputs` folder
+   - Saves outputs/baseline_results.json (used by train_improved.py for comparison)
 
-3. `src/augmentation.py`
+3. `python src/augmentation.py`
    - Visualizes augmented images
    - Trains the CNN using data augmentation
    - Saves TensorBoard logs
+
+4. `python src/train_improved.py`
+   - Trains the improved CNN with augmentation and callbacks
+   - Prints a comparison table: baseline accuracy vs improved accuracy
+   - Saves the best model to outputs/CNN_improved.keras
+   - Saves the final model to outputs/CNN_improved_final.keras
+   - Saves results to outputs/improved_results.json
+
+5. `python src/transfer_learning.py`
+   - Downloads ResNet50 weights on first run
+   - Trains in two phases (frozen base, then fine-tune)
+   - Prints accuracy comparison vs baseline CNN
+   - Saves model and plots to the `outputs` folder
 
 View the saved model
 - If the saved file is `outputs/CNN.keras`, run:
@@ -35,5 +49,8 @@ View the saved model
   netron outputs/baseline_model.keras
 
 View TensorBoard logs
-- Run:
+- For augmentation training run:
   tensorboard --logdir=logs/augmentation
+
+- For improved CNN training run:
+  tensorboard --logdir=logs/improved
