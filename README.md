@@ -1,12 +1,12 @@
-# CIFAR-10 Image Classification
+# CIFAR-10 & CIFAR-100 Image Classification
 
-A CNN-based image classification project on the CIFAR-10 dataset. Covers baseline training, data augmentation, transfer learning with ResNet50, and an improved CNN with BatchNormalization and adaptive training callbacks.
+A CNN-based image classification project covering CIFAR-10 and CIFAR-100. Includes baseline training, data augmentation, transfer learning with ResNet50, and an improved CNN with BatchNormalization and adaptive callbacks. The CIFAR-100 section applies all lessons learned from CIFAR-10 from the start.
 
 ---
 
 ## Setup
 
-**Requirements:** Python 3.12 (not Python 3.9)
+**Requirements:** Python 3.9
 
 ### 1. Clone the repository
 ```bash
@@ -16,7 +16,7 @@ cd cifar10-project
 
 ### 2. Create and activate a virtual environment
 ```bash
-python3.12 -m venv venv
+python3.9 -m venv venv
 
 # Mac/Linux
 source venv/bin/activate
@@ -118,3 +118,79 @@ Trains the improved CNN on CIFAR-10 with augmented data and three callbacks:
 - `ModelCheckpoint` — saves the best model to `outputs/CNN_improved.keras`
 
 Reads `outputs/baseline_results.json` to print a live accuracy comparison at the end. Saves final model, training curves, and results JSON to `outputs/`.
+
+---
+
+## CIFAR-100
+
+The `cifar100/` folder applies every lesson from CIFAR-10 to the harder CIFAR-100 dataset (100 classes, only 500 images per class).
+
+### Key improvements over CIFAR-10
+
+| | CIFAR-10 | CIFAR-100 |
+|---|---|---|
+| Conv blocks | 3 | 4 (128→256→512→512) |
+| Pooling before classifier | Flatten | GlobalAveragePooling |
+| Dropout | 0.4 | 0.5 |
+| L2 regularization | No | Yes |
+| Augmentation strength | Basic | Stronger (+ shear) |
+| Callbacks in transfer learning | No | Yes |
+| Fine-tune layers | All base | Top 50 only |
+| Early stop patience | 7 | 10 |
+
+### How to Run (CIFAR-100)
+
+Run all commands from the repo root with the venv activated.
+
+#### CNN Training
+```bash
+python cifar100/src/train.py
+```
+Trains with augmentation and all callbacks from epoch 1. Saves best model to `cifar100/outputs/cnn_cifar100.keras` and training curves to `cifar100/outputs/training_curves.png`.
+
+To view TensorBoard logs:
+```bash
+tensorboard --logdir=cifar100/logs
+```
+
+#### Transfer Learning (EfficientNetB3)
+```bash
+python cifar100/src/transfer_learning.py
+```
+Downloads EfficientNetB3 weights on first run (~44MB). Resizes images to 224×224 on-the-fly via a tf.data pipeline (avoids RAM overflow). Trains the custom head for up to 15 epochs (base frozen), then fine-tunes the top 50 EfficientNetB3 layers for up to 15 more epochs at a low learning rate. Uses label smoothing (0.1) and cosine decay LR schedule throughout. Achieved **77.46% test accuracy**. Saves model to `cifar100/outputs/efficientnetb3_cifar100.keras`.
+
+#### Predict on an image
+```bash
+python cifar100/src/predict.py --image path/to/image.jpg
+
+# Use transfer learning model instead
+python cifar100/src/predict.py --image path/to/image.jpg --model cifar100/outputs/resnet50_cifar100.keras
+```
+Prints top-5 predictions with confidence scores and saves a bar chart to `cifar100/outputs/prediction.png`.
+
+### What Each File Does (CIFAR-100)
+
+#### `cifar100/src/data_loader.py`
+Loads CIFAR-100 fine labels (100 classes), normalises pixels to [0,1], and one-hot encodes labels. Returns train/test splits and all 100 class names.
+
+#### `cifar100/src/model_cnn.py`
+Deeper CNN with 4 conv blocks, BatchNorm, LeakyReLU, GlobalAveragePooling, L2 regularization, and Dropout(0.5). Outputs 100-class softmax.
+
+#### `cifar100/src/augmentation.py`
+Stronger augmentation than CIFAR-10: rotation 15°, shifts 10%, shear 10%, zoom 15%, horizontal flip. Applied from the first training epoch.
+
+#### `cifar100/src/train.py`
+Full training pipeline with augmentation + ReduceLROnPlateau + EarlyStopping + ModelCheckpoint baked in from day 1. Saves best model, training curves, and a results JSON to `cifar100/outputs/`.
+
+#### `cifar100/src/transfer_learning.py`
+- Loads EfficientNetB3 pretrained on ImageNet
+- Resizes CIFAR-100 images from 32×32 to 224×224 on-the-fly (tf.data pipeline, no RAM spike)
+- Phase 1: trains custom head (GlobalAveragePooling → BatchNorm → Dense 512 → Dropout → Dense 100) with base frozen, cosine decay LR from 1e-3
+- Phase 2: fine-tunes top 50 EfficientNetB3 layers at cosine decay LR from 1e-5
+- Label smoothing (0.1) applied in both phases
+- Both phases use EarlyStopping and ModelCheckpoint
+- Achieved **77.46% test accuracy** on CIFAR-100
+- Saves model and training curves to `cifar100/outputs/`
+
+#### `cifar100/src/predict.py`
+Loads any saved CIFAR-100 model, runs inference on a single image, and shows top-5 class predictions with a confidence bar chart.
