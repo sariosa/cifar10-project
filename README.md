@@ -68,6 +68,22 @@ To view TensorBoard logs after training:
 tensorboard --logdir=logs/improved
 ```
 
+### Model Evaluation + Grad-CAM
+```bash
+python src/evaluate_gradcam.py
+```
+Evaluates the improved CNN on the CIFAR-10 test set and generates:
+- confusion matrix heatmap
+- classification report (precision, recall, F1-score per class)
+- correct prediction examples with confidence scores
+- incorrect prediction examples with confidence scores
+- Grad-CAM visualisations showing where the model focuses
+Saved outputs:
+- outputs/confusion_matrix.png
+- outputs/classification_report.txt
+- outputs/correct_predictions.png
+- outputs/incorrect_predictions.png
+- outputs/gradcam_examples.png
 ---
 
 ## What Each File Does
@@ -119,6 +135,14 @@ Trains the improved CNN on CIFAR-10 with augmented data and three callbacks:
 
 Reads `outputs/baseline_results.json` to print a live accuracy comparison at the end. Saves final model, training curves, and results JSON to `outputs/`.
 
+### `src/evaluate_gradcam.py`
+- Loads the trained improved CNN from `outputs/CNN_improved.keras`
+- Evaluates the model on the CIFAR-10 test set
+- Generates a confusion matrix heatmap
+- Prints and saves a classification report
+- Shows correct and incorrect predictions with confidence scores
+- Implements Grad-CAM visualisations to highlight image regions the model focuses on
+- Prints the most common class confusions for error analysis
 ---
 
 ## CIFAR-100
