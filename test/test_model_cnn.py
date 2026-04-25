@@ -1,3 +1,4 @@
+# Run with: ./venv/bin/python test/test_model_cnn.py
 import sys
 import os
 
