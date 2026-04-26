@@ -14,43 +14,83 @@ Certificate issue
 - If `test_data_loader.py` fails because of a certificate error, activate the Python certificates on your system, then run the test again.
 
 Recommended order for running the files
+
+For CIFAR-10
 1. `python test/test_data_loader.py`
    - Verifies that CIFAR-10 loads correctly
 
 2. `python src/train_baseline.py`
    - Trains the baseline CNN
    - Evaluates the model
-   - Saves the trained model to the `outputs` folder
-   - Saves outputs/baseline_results.json (used by train_improved.py for comparison)
+   - Saves the trained model to `outputs/CNN.keras`
+   - Saves `outputs/baseline_results.json` for later comparison
+   - Saves `outputs/baseline_training_curves.png`
 
 3. `python src/augmentation.py`
    - Visualizes augmented images
-   - Trains the CNN using data augmentation
+   - Trains the baseline CNN with and without augmentation for comparison
+   - Saves `outputs/augmentation_comparison.png`
    - Saves TensorBoard logs
 
 4. `python src/train_improved.py`
-   - Trains the improved CNN with augmentation and callbacks
-   - Prints a comparison table: baseline accuracy vs improved accuracy
-   - Saves the best model to outputs/CNN_improved.keras
-   - Saves the final model to outputs/CNN_improved_final.keras
-   - Saves results to outputs/improved_results.json
+   - Trains the improved CNN v3
+   - Uses residual blocks, stronger augmentation, cutout, cosine decay, and label smoothing
+   - Prints a comparison table with baseline and earlier improved results
+   - Saves the best model to `outputs/CNN_improved_v3.keras`
+   - Saves the final model to `outputs/CNN_improved_v3_final.keras`
+   - Saves results to `outputs/improved_v3_results.json`
+   - Saves training curves to `outputs/improved_v3_training_curves.png`
 
 5. `python src/transfer_learning.py`
    - Downloads ResNet50 weights on first run
-   - Trains in two phases (frozen base, then fine-tune)
+   - Trains in two phases: frozen base, then fine-tuning
    - Prints accuracy comparison vs baseline CNN
    - Saves model and plots to the `outputs` folder
 
+6. `python src/predict.py --model outputs/CNN_improved_v3.keras --image path/to/image.png`
+   - Predicts the class of a custom image using a trained CIFAR-10 model
+   - If no image is provided, a random CIFAR-10 test image is used
+
+For CIFAR-100
+1. `python cifar100/src/train.py`
+   - Trains the CIFAR-100 CNN with augmentation, cosine decay, label smoothing, and callbacks
+   - Saves the best model to `cifar100/outputs/cnn_cifar100.keras`
+   - Saves results to `cifar100/outputs/cnn_results.json`
+   - Saves training curves to `cifar100/outputs/training_curves.png`
+
+2. `python cifar100/src/transfer_learning.py`
+   - Downloads EfficientNetB3 weights on first run
+   - Trains in two phases: frozen base, then fine-tuning top 50 layers
+   - Saves the final model to `cifar100/outputs/efficientnetb3_cifar100.keras`
+   - Saves phase checkpoints and training curves to `cifar100/outputs/`
+   - Saves results to `cifar100/outputs/transfer_results.json`
+
+3. `python cifar100/src/predict.py --image path/to/image.jpg`
+   - Predicts the top classes for a custom image using the default CIFAR-100 model
+
+4. `python cifar100/src/predict.py --image path/to/image.jpg --model cifar100/outputs/efficientnetb3_cifar100.keras`
+   - Predicts using the CIFAR-100 transfer learning model instead
+
 View the saved model
-- If the saved file is `outputs/CNN.keras`, run:
+- To inspect the baseline model:
   netron outputs/CNN.keras
 
-- If the saved file is `outputs/baseline_model.keras`, run:
-  netron outputs/baseline_model.keras
+- To inspect the improved CIFAR-10 model:
+  netron outputs/CNN_improved_v3.keras
+
+- To inspect the CIFAR-100 transfer learning model:
+  netron cifar100/outputs/efficientnetb3_cifar100.keras
 
 View TensorBoard logs
 - For augmentation training run:
   tensorboard --logdir=logs/augmentation
 
-- For improved CNN training run:
-  tensorboard --logdir=logs/improved
+- For improved CNN v3 training run:
+  tensorboard --logdir=logs/improved_v3
+
+- For CIFAR-100 CNN training run:
+  tensorboard --logdir=cifar100/logs
+
+Quick note
+- If you only want to reproduce the strongest saved CIFAR-10 result, run `src/train_baseline.py` first, then `src/train_improved.py`.
+- If you only want the strongest saved CIFAR-100 result in this repo, run `cifar100/src/transfer_learning.py`.
