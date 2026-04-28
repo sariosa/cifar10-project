@@ -1,0 +1,38 @@
+PROJECT MODEL COMPARISON
+================================================================================
+
+Dataset   : CIFAR-10
+Stage     : Baseline
+Model     : Baseline CNN
+Accuracy  : 0.6948 (69.48%)
+Loss      : 0.8836
+Evidence  : outputs/baseline_results.json
+--------------------------------------------------------------------------------
+Dataset   : CIFAR-10
+Stage     : Improved
+Model     : Improved CNN v1
+Accuracy  : 0.8652 (86.52%)
+Loss      : 0.4552
+Evidence  : outputs/improved_results.json
+--------------------------------------------------------------------------------
+Dataset   : CIFAR-10
+Stage     : Improved
+Model     : Improved CNN v3
+Accuracy  : 0.9214 (92.14%)
+Loss      : 0.8078
+Evidence  : outputs/improved_v3_results.json
+--------------------------------------------------------------------------------
+Dataset   : CIFAR-10
+Stage     : Transfer Learning
+Model     : ResNet50 transfer learning
+Accuracy  : 0.9522 (95.22%)
+Loss      : 0.1937
+Evidence  : outputs/transfer_learning_results.json
+--------------------------------------------------------------------------------
+Dataset   : CIFAR-100
+Stage     : Transfer Learning
+Model     : EfficientNetB3 fine-tuned
+Accuracy  : 0.7746 (77.46%)
+Loss      : 1.5634
+Evidence  : cifar100/outputs/transfer_results.json / cifar100_evaluation_results.json
+--------------------------------------------------------------------------------

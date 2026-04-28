@@ -1,0 +1,6 @@
+{
+  "test_accuracy": 0.6948,
+  "test_loss": 0.8836,
+  "epochs": 10,
+  "batch_size": 64
+}

@@ -1,0 +1,8 @@
+{
+  "model": "EfficientNetB3",
+  "test_accuracy": 0.7746,
+  "test_loss": 1.5634,
+  "epochs_phase1": 15,
+  "epochs_phase2": 15,
+  "label_smoothing": 0.1
+}

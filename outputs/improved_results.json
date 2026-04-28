@@ -1,0 +1,14 @@
+{
+  "epochs": 50,
+  "batch_size": 64,
+  "learning_rate": 0.001,
+  "dropout_rate": 0.4,
+  "validation_split": 0.1,
+  "random_seed": 42,
+  "lr_reduce_factor": 0.5,
+  "lr_reduce_patience": 3,
+  "lr_min": 1e-06,
+  "early_stop_patience": 7,
+  "test_accuracy": 0.8652,
+  "test_loss": 0.4552
+}

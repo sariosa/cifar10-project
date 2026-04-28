@@ -1,0 +1,6 @@
+{
+  "model": "EfficientNetB3 fine-tuned",
+  "dataset": "CIFAR-100",
+  "test_accuracy": 0.7746,
+  "test_loss": 1.5634
+}
