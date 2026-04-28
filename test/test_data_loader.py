@@ -1,3 +1,4 @@
+# Run with: ./venv/bin/python test/test_data_loader.py
 import sys
 import os
 

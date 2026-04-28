@@ -21,6 +21,7 @@ Why this file exists:
 
 import os
 import sys
+import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
@@ -33,7 +34,38 @@ from src.data_loader import load_cifar10
 from src.model_CNN import build_baseline_cnn
 
 
-def create_datagen():
+def make_cutout_fn(length=8, n_holes=1):
+    """
+    Build a per-image cutout function for ImageDataGenerator.
+
+    Args:
+        length: Side length of each cutout square.
+        n_holes: Number of squares to mask per image.
+    """
+    def cutout_fn(image):
+        if length <= 0 or n_holes <= 0:
+            return image
+
+        h, w = image.shape[:2]
+        mask = np.ones_like(image, dtype=np.float32)
+
+        for _ in range(n_holes):
+            cy = np.random.randint(0, h)
+            cx = np.random.randint(0, w)
+
+            y1 = max(0, cy - length // 2)
+            y2 = min(h, cy + length // 2)
+            x1 = max(0, cx - length // 2)
+            x2 = min(w, cx + length // 2)
+
+            mask[y1:y2, x1:x2, :] = 0.0
+
+        return image * mask
+
+    return cutout_fn
+
+
+def create_datagen(cutout_length=8, cutout_n_holes=1):
     """
     Create and return the image augmentation generator.
 
@@ -42,11 +74,13 @@ def create_datagen():
     - training the CNN model
     """
     return ImageDataGenerator(
-        rotation_range=10,
-        width_shift_range=0.05,
-        height_shift_range=0.05,
-        zoom_range=0.1,
-        horizontal_flip=True
+        rotation_range=15,
+        width_shift_range=0.125,
+        height_shift_range=0.125,
+        zoom_range=0.15,
+        horizontal_flip=True,
+        fill_mode="nearest",
+        preprocessing_function=make_cutout_fn(cutout_length, cutout_n_holes),
     )
 
 

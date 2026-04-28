@@ -1,3 +1,4 @@
+# Run with: ./venv/bin/python test/test_transfer_learning.py
 import sys
 import os
 
