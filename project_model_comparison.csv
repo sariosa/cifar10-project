@@ -1,0 +1,6 @@
+Dataset,Stage,Model,Accuracy,Accuracy (%),Loss,Evidence
+CIFAR-10,Baseline,Baseline CNN,0.6948,69.48,0.8836,outputs/baseline_results.json
+CIFAR-10,Improved,Improved CNN v1,0.8652,86.52,0.4552,outputs/improved_results.json
+CIFAR-10,Improved,Improved CNN v3,0.9214,92.14,0.8078,outputs/improved_v3_results.json
+CIFAR-10,Transfer Learning,ResNet50 transfer learning,0.9522,95.22,0.1937,outputs/transfer_learning_results.json
+CIFAR-100,Transfer Learning,EfficientNetB3 fine-tuned,0.7746,77.46,1.5634,cifar100/outputs/transfer_results.json / cifar100_evaluation_results.json

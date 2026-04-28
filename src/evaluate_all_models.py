@@ -14,6 +14,25 @@ sys.path.insert(0, project_root)
 from src.data_loader import load_cifar10
 
 
+class CompatibleBatchNormalization(tf.keras.layers.BatchNormalization):
+    """
+    Compatibility wrapper for older saved Keras models.
+
+    Some models saved with older TensorFlow/Keras versions include BatchNormalization
+    arguments that newer versions may not accept, such as:
+    - renorm
+    - renorm_clipping
+    - renorm_momentum
+
+    This class removes those unsupported arguments before loading the layer.
+    """
+    def __init__(self, *args, **kwargs):
+        kwargs.pop("renorm", None)
+        kwargs.pop("renorm_clipping", None)
+        kwargs.pop("renorm_momentum", None)
+        super().__init__(*args, **kwargs)
+
+
 CIFAR10_CLASSES = [
     "airplane", "automobile", "bird", "cat", "deer",
     "dog", "frog", "horse", "ship", "truck"
@@ -30,7 +49,7 @@ def get_model_config(model_type):
 
     This lets one evaluation file work for:
     - baseline CNN
-    - improved CNN
+    - improved CNN v3
     - transfer learning ResNet50
     """
     model_type = model_type.lower()
@@ -44,8 +63,10 @@ def get_model_config(model_type):
 
     elif model_type == "improved":
         return {
-            "model_path": os.path.join(project_root, "outputs", "CNN_improved_final.keras"),
-            "display_name": "improved",
+            # This uses the patched V3 model.
+            # The original V3 model was saved with older BatchNormalization config keys.
+            "model_path": os.path.join(project_root, "outputs", "CNN_improved_v3_final_patched.keras"),
+            "display_name": "improved_v3",
             "needs_transfer_preprocessing": False
         }
 
@@ -60,13 +81,58 @@ def get_model_config(model_type):
         raise ValueError("model_type must be one of: baseline, improved, transfer")
 
 
+def load_model_with_compatibility(model_path):
+    """
+    Load a Keras model.
+
+    First tries normal loading.
+    If that fails because of version differences, tries compatibility mode.
+    If BatchNormalization has old unsupported arguments, use a compatible
+    BatchNormalization class that ignores those arguments.
+    """
+    try:
+        model = tf.keras.models.load_model(model_path)
+        return model
+
+    except Exception as e:
+        print("\nNormal model loading failed.")
+        print("Trying compatibility mode...")
+        print("\nOriginal loading error:")
+        print(e)
+
+        try:
+            model = tf.keras.models.load_model(
+                model_path,
+                compile=False,
+                safe_mode=False
+            )
+            return model
+
+        except Exception as e:
+            print("\nCompatibility mode failed.")
+            print("Trying custom BatchNormalization compatibility loader...")
+            print("\nSecond loading error:")
+            print(e)
+
+            model = tf.keras.models.load_model(
+                model_path,
+                compile=False,
+                safe_mode=False,
+                custom_objects={
+                    "BatchNormalization": CompatibleBatchNormalization
+                }
+            )
+
+            return model
+
+
 def load_trained_model(model_type):
     """
     Step 1: Load the chosen model.
 
     Depending on the command used in the terminal, this function loads:
     - outputs/CNN.keras for baseline
-    - outputs/CNN_improved_final.keras for improved
+    - outputs/CNN_improved_v3_final_patched.keras for improved CNN v3
     - outputs/resnet50_cifar10.keras for transfer learning
     """
     config = get_model_config(model_type)
@@ -74,12 +140,15 @@ def load_trained_model(model_type):
 
     if not os.path.exists(model_path):
         raise FileNotFoundError(
-            f"Model not found at: {model_path}\n"
-            f"Make sure you trained the {model_type} model first."
+            f"Model not found at: {model_path}\n\n"
+            f"If you are evaluating improved V3, first run:\n"
+            f"py patch_v3_model.py\n\n"
+            f"Make sure the chosen model exists in the outputs folder."
         )
 
     print(f"Loading {model_type} model from: {model_path}")
-    model = tf.keras.models.load_model(model_path)
+
+    model = load_model_with_compatibility(model_path)
 
     # Build/call the model once with a dummy input.
     # Baseline and improved expect 32x32 images.
@@ -471,7 +540,7 @@ def main():
     """
     Full evaluation pipeline.
 
-    Same steps for baseline, improved, and transfer:
+    Same steps for baseline, improved v3, and transfer:
 
     Step 1: Load the chosen model.
     Step 2: Load CIFAR-10 test data.
